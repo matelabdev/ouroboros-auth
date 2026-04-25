@@ -12,8 +12,8 @@ struct SessionData {
 }
 
 fn main() {
-    let server = Server::http("0.0.0.0:6000").unwrap();
-    println!("Ouroboros Auth Server running on http://localhost:6000");
+    let server = Server::http("0.0.0.0:6060").unwrap();
+    println!("Ouroboros Auth Server running on http://localhost:6060");
 
     for request in server.incoming_requests() {
         let url = request.url().to_string();
