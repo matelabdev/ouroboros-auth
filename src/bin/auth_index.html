@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ouroboros Auth | Mesh Sessions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=JetBrains+Mono&display=swap');
+        
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .auth-card {
+            width: 350px;
+            padding: 2.5rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 32px;
+            backdrop-filter: blur(20px);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.2rem; color: #00f2ff; letter-spacing: 2px; margin-bottom: 2rem; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #fff;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #00f2ff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover { transform: scale(1.02); }
+
+        .session-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 242, 255, 0.05);
+            border-radius: 16px;
+            font-size: 0.8rem;
+            text-align: left;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .mesh-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #00ff88;
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 900;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="auth-card">
+        <h1>OUROBOROS AUTH</h1>
+        
+        <div v-if="!session">
+            <input type="text" v-model="username" placeholder="Username">
+            <input type="password" placeholder="Password (Any will do)">
+            <button @click="login">LOGIN TO MESH</button>
+        </div>
+
+        <div v-else>
+            <div class="mesh-badge">MESH SESSION ACTIVE</div>
+            <div class="session-info">
+                <pre style="margin:0; overflow-x:auto;">{{ JSON.stringify(session, null, 2) }}</pre>
+            </div>
+            <button @click="logout" style="margin-top: 20px; background: #ff0055; color: #fff;">LOGOUT (WIPE MESH)</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createApp, ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        createApp({
+            setup() {
+                const username = ref('')
+                const session = ref(null)
+
+                const login = async () => {
+                    const res = await fetch(`/api/login?u=${username.value}`);
+                    const data = await res.json();
+                    localStorage.setItem('ouro_token', data.token);
+                    checkSession();
+                }
+
+                const checkSession = async () => {
+                    const token = localStorage.getItem('ouro_token');
+                    if(!token) return;
+                    const res = await fetch(`/api/validate?t=${token}`);
+                    if(res.ok) {
+                        session.value = await res.json();
+                    } else {
+                        session.value = null;
+                        localStorage.removeItem('ouro_token');
+                    }
+                }
+
+                const logout = async () => {
+                    const token = localStorage.getItem('ouro_token');
+                    await fetch(`/api/logout?t=${token}`);
+                    session.value = null;
+                    localStorage.removeItem('ouro_token');
+                }
+
+                onMounted(checkSession);
+                return { username, session, login, logout }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
