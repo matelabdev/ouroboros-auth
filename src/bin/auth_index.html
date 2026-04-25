@@ -92,7 +92,21 @@
             <div class="session-info">
                 <pre style="margin:0; overflow-x:auto;">{{ JSON.stringify(session, null, 2) }}</pre>
             </div>
-            <button @click="logout" style="margin-top: 20px; background: #ff0055; color: #fff;">LOGOUT (WIPE MESH)</button>
+            <button @click="goToFS" style="margin-top: 20px; background: #7000ff; color: #fff;">GO TO FILE SYSTEM 🛸</button>
+            <button @click="logout" style="margin-top: 10px; background: #ff0055; color: #fff;">LOGOUT (WIPE MESH)</button>
+        </div>
+
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
+
+        <div style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 0.8rem; color: rgba(255,255,255,0.4); margin: 0;">ACTIVE MESH SESSIONS</h2>
+                <button @click="fetchSessions" style="background: none; border: 1px solid var(--primary); color: var(--primary); font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; cursor: pointer;">REFRESH</button>
+            </div>
+            <div v-for="s in allSessions" :key="s.created_at" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 0.8rem; font-weight: 700;">{{ s.username }}</div>
+                <div style="font-size: 0.6rem; color: rgba(255,255,255,0.3);">Role: {{ s.role }} | Start: {{ s.created_at.split('T')[1].substring(0,5) }}</div>
+            </div>
         </div>
     </div>
 
@@ -103,12 +117,19 @@
             setup() {
                 const username = ref('')
                 const session = ref(null)
+                const allSessions = ref([])
+
+                const fetchSessions = async () => {
+                    const res = await fetch('/api/sessions');
+                    allSessions.value = await res.json();
+                }
 
                 const login = async () => {
                     const res = await fetch(`/api/login?u=${username.value}`);
                     const data = await res.json();
                     localStorage.setItem('ouro_token', data.token);
                     checkSession();
+                    fetchSessions();
                 }
 
                 const checkSession = async () => {
@@ -128,10 +149,21 @@
                     await fetch(`/api/logout?t=${token}`);
                     session.value = null;
                     localStorage.removeItem('ouro_token');
+                    fetchSessions();
                 }
 
-                onMounted(checkSession);
-                return { username, session, login, logout }
+                const goToFS = () => {
+                    const token = localStorage.getItem('ouro_token');
+                    window.location.href = `http://localhost:7000?t=${token}`;
+                }
+
+                onMounted(() => {
+                    checkSession();
+                    fetchSessions();
+                    setInterval(fetchSessions, 2000);
+                });
+
+                return { username, session, allSessions, login, logout, goToFS, fetchSessions }
             }
         }).mount('#app')
     </script>

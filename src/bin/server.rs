@@ -54,6 +54,9 @@ fn main() {
                     request.respond(Response::from_string("Invalid Session").with_status_code(401)).unwrap();
                 }
             }
+        } else if url.starts_with("/api/sessions") {
+            let sessions = list_all_sessions();
+            request.respond(Response::from_string(sessions)).unwrap();
         } else if url.starts_with("/api/logout") {
             if let Some((_, token)) = url.split_once('=') {
                 let mesh_key = format!("auth:session:{}", token);
@@ -82,4 +85,25 @@ fn get_mesh_data(key: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn list_all_sessions() -> String {
+    let mut sessions = Vec::new();
+    if let Ok(mut stream) = TcpStream::connect("127.0.0.1:8825") {
+        let _ = stream.write_all(b"KEYS auth:session:*\n");
+        let mut reader = BufReader::new(&stream);
+        let mut line = String::new();
+        if reader.read_line(&mut line).is_ok() && line.starts_with('*') {
+            let count: usize = line.trim()[1..].parse().unwrap_or(0);
+            for _ in 0..count {
+                let mut l1 = String::new(); reader.read_line(&mut l1).unwrap();
+                let mut l2 = String::new(); reader.read_line(&mut l2).unwrap();
+                let key = l2.trim();
+                if let Some(data) = get_mesh_data(key) {
+                    sessions.push(data);
+                }
+            }
+        }
+    }
+    format!("[{}]", sessions.join(","))
 }
