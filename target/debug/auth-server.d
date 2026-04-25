@@ -1,0 +1,1 @@
+/Users/emrullahardic/.gemini/antigravity/scratch/ouroboros-auth/target/debug/auth-server: /Users/emrullahardic/.gemini/antigravity/scratch/ouroboros-auth/src/bin/auth_index.html /Users/emrullahardic/.gemini/antigravity/scratch/ouroboros-auth/src/bin/server.rs

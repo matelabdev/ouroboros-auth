@@ -15,7 +15,7 @@ fn main() {
     let server = Server::http("0.0.0.0:6000").unwrap();
     println!("Ouroboros Auth Server running on http://localhost:6000");
 
-    for mut request in server.incoming_requests() {
+    for request in server.incoming_requests() {
         let url = request.url().to_string();
 
         if url == "/" {
