@@ -12,6 +12,10 @@ Ouroboros Auth reimagines user sessions as "photons" in flight. Instead of stori
 - **Instant Revocation:** Deleting a session key from the mesh instantly logs out the user across all connected services.
 - **Privacy First:** Session data is encrypted using **ChaCha20-Poly1305** while in flight.
 
+### ⚠️ Required Core Engine
+This module is a plugin for the **Ouroboros L2 Mesh Network**. You **must** have a running Ouroboros node to use this auth service.
+- **Get the Engine:** [matelabdev/Ouroboros](https://github.com/matelabdev/Ouroboros)
+
 ## Getting Started
 
 ### Prerequisites
